@@ -68,29 +68,29 @@ def fit_mockaverage_new(dataflag, matterfile, datafile, covfile, winfile, winmat
 
 if __name__ == "__main__":
 
-    dataflag = int(sys.argv[1])    # Whether to fit the correlation function (0) or power spectrum (otherwise)
+    dataflag = int(sys.argv[1])    # Whether to fit the correlation function (0), power spectrum (1), or BAO extract (2)
     binwidth = int(sys.argv[2])
 
     # Filenames
     winfile = []
     winmatfile = []
-    matterfile = '/Volumes/Work/ICRAR/TAIPAN/camb_TAIPAN_matterpower_linear.dat'   # The linear matter power spectrum (i.e., from CAMB)
+    matterfile = '../files/test_files/camb_TAIPAN_matterpower_linear.dat'   # The linear matter power spectrum (i.e., from CAMB)
     if (dataflag == 0): 
-        datafile = str('/Volumes/Work/ICRAR/TAIPAN/Mocks/HOD/Mock_v1/Mock_taipan_year1_v1.xi_%d_ave_30-200' % binwidth)
-        covfile =  str('/Volumes/Work/ICRAR/TAIPAN/Mocks/HOD/Mock_v1/Mock_taipan_year1_v1.xi_%d_cov_30-200' % binwidth)       # The covariance matrix
-        chainfile = str('/Volumes/Work/ICRAR/TAIPAN/Mocks/HOD/Mock_v1/BAOfits/BAO_MockAverage_taipan_year1_v1_xi_30-200_%d' % binwidth)   # The file in which to store the output MCMC chain
+        datafile = str('../files/test_files/mock_average/Mock_taipan_year1_v1.xi_%d_ave_30-200' % binwidth)
+        covfile =  str('../files/test_files/mock_average/Mock_taipan_year1_v1.xi_%d_cov_30-200' % binwidth)       # The covariance matrix
+        chainfile = str('../files/test_files/BAOfits/BAO_MockAverage_taipan_year1_v1_xi_30-200_%d' % binwidth)   # The file in which to store the output MCMC chain
     elif (dataflag == 1):          
-        datafile = str('/Volumes/Work/ICRAR/TAIPAN/Mocks/HOD/Mock_v1/Mock_taipan_year1_v1.lpow_%d_0p02-0p30_ave_recon' % binwidth)                        # The data file
-        covfile = str('/Volumes/Work/ICRAR/TAIPAN/Mocks/HOD/Mock_v1/Mock_taipan_year1_v1.lpow_%d_0p02-0p30_cov_recon' % binwidth)       # The covariance matrix 
-        winfile = str('/Volumes/Work/ICRAR/TAIPAN/Mocks/HOD/Mock_v1/taipanmock_year1_mock_rand_cullan.lwin')                         #    Power spectrum (for the integral constraint)
-        winmatfile = str('/Volumes/Work/ICRAR/TAIPAN/Mocks/HOD/Mock_v1/taipanmock_year1_mock_rand_cullan.winfit_%d' % binwidth)      #    Convolution matrix (for convolving the model)
-        chainfile = str('/Volumes/Work/ICRAR/TAIPAN/Mocks/HOD/Mock_v1/BAOfits/BAO_MockAverage_FullShape_taipan_year1_v1_lpow_0p02-0p30_%d_recon' % binwidth)   # The file in which to store the output MCMC chain
+        datafile = str('../files/test_files/mock_average/Mock_taipan_year1_v1.lpow_%d_0p02-0p30_ave_recon' % binwidth)                        # The data file
+        covfile = str('../files/test_files/mock_average/Mock_taipan_year1_v1.lpow_%d_0p02-0p30_cov_recon' % binwidth)       # The covariance matrix 
+        winfile = str('../files/test_files/taipanmock_year1_mock_rand_cullan.lwin')                         #    Power spectrum (for the integral constraint)
+        winmatfile = str('../files/test_files/taipanmock_year1_mock_rand_cullan.winfit_%d' % binwidth)      #    Convolution matrix (for convolving the model)
+        chainfile = str('../files/test_files/BAOfits/BAO_MockAverage_FullShape_taipan_year1_v1_lpow_0p02-0p30_%d_recon' % binwidth)   # The file in which to store the output MCMC chain
     elif (dataflag == 2):          
-        datafile = str('/Volumes/Work/ICRAR/TAIPAN/Mocks/HOD/Mock_v1/Mock_taipan_year1_v1.rp_1_0p5_%d_0p02-0p30_ave' % binwidth)                        # The data file
-        covfile = str('/Volumes/Work/ICRAR/TAIPAN/Mocks/HOD/Mock_v1/Mock_taipan_year1_v1.rp_1_0p5_%d_0p02-0p30_cov' % binwidth)       # The covariance matrix 
-        winfile = str('/Volumes/Work/ICRAR/TAIPAN/Mocks/HOD/Mock_v1/taipanmock_year1_mock_rand_cullan.lwin')                         #    Power spectrum (for the integral constraint)
-        winmatfile = str('/Volumes/Work/ICRAR/TAIPAN/Mocks/HOD/Mock_v1/taipanmock_year1_mock_rand_cullan.winfit_%d' % binwidth)      #    Convolution matrix (for convolving the model)
-        chainfile = str('/Volumes/Work/ICRAR/TAIPAN/Mocks/HOD/Mock_v1/BAOfits/BAO_MockAverage_BAOExtractor_taipan_year1_v1_rp_1_0p5_0p02-0p30_%d' % binwidth)   # The file in which to store the output MCMC chain
+        datafile = str('../files/test_files/mock_average/Mock_taipan_year1_v1.rp_1_0p5_%d_0p02-0p30_ave' % binwidth)                        # The data file
+        covfile = str('../files/test_files/mock_average/Mock_taipan_year1_v1.rp_1_0p5_%d_0p02-0p30_cov' % binwidth)       # The covariance matrix 
+        winfile = str('../files/test_files/taipanmock_year1_mock_rand_cullan.lwin')                         #    Power spectrum (for the integral constraint)
+        winmatfile = str('../files/test_files/taipanmock_year1_mock_rand_cullan.winfit_%d' % binwidth)      #    Convolution matrix (for convolving the model)
+        chainfile = str('../files/test_files/BAOfits/BAO_MockAverage_BAOExtractor_taipan_year1_v1_rp_1_0p5_0p02-0p30_%d' % binwidth)   # The file in which to store the output MCMC chain
     else:
         print "dataflag value not supported, ", dataflag
         exit()
