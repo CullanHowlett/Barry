@@ -52,11 +52,11 @@ def fit_mockaverage_new(dataflag, matterfile, datafile, covfile, winfile, winmat
         data = PowerSpectrum(nmocks=1000, verbose=True).read_data(datafile=datafile, covfile=covfile, xmin=xmin, xmax=xmax, winmatfile=winmatfile)
         data.read_data(winfile=winfile, xmin=xmin, xmax=xmax, nconcat=binwidth)
         #model = Polynomial("PowerSpectrum", power, free_sigma_nl=True, prepare_model_flag=True, verbose=True)
-        model = FullShape("PowerSpectrum", power, free_sigma_nl=True, nonlinearterms="compute_pt_integrals_output.dat", verbose=True)
+        model = FullShape("PowerSpectrum", power, free_sigma_nl=True, nonlinearterms="./files/compute_pt_integrals_output.dat", verbose=True)
     elif (dataflag == 2):
         data = BAOExtract(nmocks=1000, verbose=True).read_data(datafile=datafile, covfile=covfile, xmin=xmin, xmax=xmax, winmatfile=winmatfile)
         data.read_data(winfile=winfile, xmin=xmin, xmax=xmax, nconcat=binwidth)
-        model = BAOExtractor(power, free_sigma_nl=True, nonlinearterms="compute_pt_integrals_output.dat", verbose=True)
+        model = BAOExtractor(power, free_sigma_nl=True, nonlinearterms="./files/compute_pt_integrals_output.dat", verbose=True)
     else:
         print "dataflag value not supported, ", dataflag
         exit()

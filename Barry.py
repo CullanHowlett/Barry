@@ -56,11 +56,11 @@ def fit_data_new(dataflag, binwidth, matterfile, datafile, covfile, winfile, win
     elif (dataflag == 1):
         data = PowerSpectrum(nmocks=1000, verbose=True).read_data(datafile=datafile, covfile=covfile, xmin=xmin, xmax=xmax, nconcat=binwidth, winfile=winfile, winmatfile=winmatfile)
         #model = Polynomial("PowerSpectrum", power, free_sigma_nl=True, prepare_model_flag=True, verbose=True)
-        model = FullShape("PowerSpectrum", power, free_sigma_nl=True, nonlinearterms="compute_pt_integrals_output.dat", verbose=True)
+        model = FullShape("PowerSpectrum", power, free_sigma_nl=True, nonlinearterms="./files/compute_pt_integrals_output.dat", verbose=True)
         #model.set_prior("sigma_nl", ["Gaussian", 12.5, 2.0])
     elif (dataflag == 2):
         data = BAOExtract(nmocks=1000, verbose=True).read_data(datafile=datafile, covfile=covfile, xmin=xmin, xmax=xmax, nconcat=binwidth, winfile=winfile, winmatfile=winmatfile).extract_BAO(power.r_s)
-        model = BAOExtractor(power, free_sigma_nl=True, nonlinearterms="compute_pt_integrals_output.dat", verbose=True)
+        model = BAOExtractor(power, free_sigma_nl=True, nonlinearterms="./files/compute_pt_integrals_output.dat", verbose=True)
     else:
         print "dataflag value not supported, ", dataflag
         exit()

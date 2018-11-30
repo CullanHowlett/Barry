@@ -29,7 +29,7 @@ class CorrelationFunction(object):
         return self
 
     def __read_xi(self, datafile, xmin, xmax):
-        self.x, self.y = __xi_read(self, datafile, xmin, xmax)
+        self.x, self.y = self.__xi_read(datafile, xmin, xmax)
         return self
 
     def __xi_read(self, datafile, xmin, xmax):
