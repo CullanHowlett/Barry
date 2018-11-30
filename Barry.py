@@ -55,9 +55,8 @@ def fit_data_new(dataflag, binwidth, matterfile, datafile, covfile, winfile, win
         model.sigma_nl = 11.7
     elif (dataflag == 1):
         data = PowerSpectrum(nmocks=1000, verbose=True).read_data(datafile=datafile, covfile=covfile, xmin=xmin, xmax=xmax, nconcat=binwidth, winfile=winfile, winmatfile=winmatfile)
-        #model = Polynomial("PowerSpectrum", power, free_sigma_nl=True, prepare_model_flag=True, verbose=True)
         model = FullShape("PowerSpectrum", power, free_sigma_nl=True, nonlinearterms="./files/compute_pt_integrals_output.dat", verbose=True)
-        #model.set_prior("sigma_nl", ["Gaussian", 12.5, 2.0])
+        set_prior(model, "sigma_nl", ["Gaussian", 12.5, 4.0])
     elif (dataflag == 2):
         data = BAOExtract(nmocks=1000, verbose=True).read_data(datafile=datafile, covfile=covfile, xmin=xmin, xmax=xmax, nconcat=binwidth, winfile=winfile, winmatfile=winmatfile).extract_BAO(power.r_s)
         model = BAOExtractor(power, free_sigma_nl=True, nonlinearterms="./files/compute_pt_integrals_output.dat", verbose=True)
@@ -66,7 +65,7 @@ def fit_data_new(dataflag, binwidth, matterfile, datafile, covfile, winfile, win
         exit()
 
     # Fit the data iterating over a list of alpha values
-    fitter = MCMC_emcee(data, model, niterations=4000, liketype="SH2016", do_plot=1, startfrombestfit=False, outputfile=chainfile)
+    fitter = MCMC_emcee(data, model, niterations=4000, liketype="SH2016", do_plot=1, startfrombestfit=True, outputfile=chainfile)
     fitter.fit_data()
 
     return
@@ -83,7 +82,7 @@ if __name__ == "__main__":
     # Filenames
     winfile = []
     winmatfile = []
-    matterfile = './files/camb_TAIPAN_matterpower_linear.dat'   # The linear matter power spectrum (i.e., from CAMB)
+    matterfile = './files/test_files/camb_TAIPAN_matterpower_linear.dat'   # The linear matter power spectrum (i.e., from CAMB)
     if (dataflag == 0): 
         datafile = str('./files/test_files/mock_individual/Mock_taipan_year1_v1_R%d.xi_%d' % (mocknum, binwidth))
         covfile =  str('./files/test_files/mock_average/Mock_taipan_year1_v1.xi_%d_cov' % binwidth)       # The covariance matrix
@@ -93,7 +92,7 @@ if __name__ == "__main__":
         covfile = str('./files/test_files/mock_average/Mock_taipan_year1_v1.lpow_%d_0p02-0p30_cov' % binwidth)       # The covariance matrix 
         winfile = str('./files/test_files/taipanmock_year1_mock_rand_cullan.lwin')                         #    Power spectrum (for the integral constraint)
         winmatfile = str('./files/test_files//taipanmock_year1_mock_rand_cullan.winfit_%d' % binwidth)      #    Convolution matrix (for convolving the model)
-        chainfile = str('./files/test_files/BAOfits/BAO_Mock_FullShape_FreeSigmaNL_taipan_year1_v1_R%d_lpow_0p02-0p30_%d' % (mocknum, binwidth))   # The file in which to store the output MCMC chain
+        chainfile = str('./files/test_files/BAOfits/BAO_Mock_FullShape_SigmaNLprior_taipan_year1_v1_R%d_lpow_0p02-0p30_%d' % (mocknum, binwidth))   # The file in which to store the output MCMC chain
     elif (dataflag == 2):          
         datafile = str('./files/test_files/mock_individual/Mock_taipan_year1_v1_R%d.lpow_blake' % (mocknum))                        # The data file
         covfile = str('./files/test_files/mock_average/Mock_taipan_year1_v1.rp_1_0p5_%d_0p02-0p30_cov' % binwidth)       # The covariance matrix 

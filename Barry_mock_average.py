@@ -50,8 +50,8 @@ def fit_mockaverage_new(dataflag, matterfile, datafile, covfile, winfile, winmat
     elif (dataflag == 1):
         data = PowerSpectrum(nmocks=1000, verbose=True).read_data(datafile=datafile, covfile=covfile, xmin=xmin, xmax=xmax, winmatfile=winmatfile)
         data.read_data(winfile=winfile, xmin=xmin, xmax=xmax, nconcat=binwidth)
-        #model = Polynomial("PowerSpectrum", power, free_sigma_nl=True, prepare_model_flag=True, verbose=True)
-        model = FullShape("PowerSpectrum", power, free_sigma_nl=True, nonlinearterms="./files/compute_pt_integrals_output.dat", verbose=True)
+        model = Polynomial("PowerSpectrum", power, free_sigma_nl=True, prepare_model_flag=True, verbose=True)
+        #model = FullShape("PowerSpectrum", power, free_sigma_nl=True, nonlinearterms="./files/compute_pt_integrals_output.dat", verbose=True)
     elif (dataflag == 2):
         data = BAOExtract(nmocks=1000, verbose=True).read_data(datafile=datafile, covfile=covfile, xmin=xmin, xmax=xmax, winmatfile=winmatfile)
         data.read_data(winfile=winfile, xmin=xmin, xmax=xmax, nconcat=binwidth)
@@ -80,11 +80,11 @@ if __name__ == "__main__":
         covfile =  str('./files/test_files/mock_average/Mock_taipan_year1_v1.xi_%d_cov_30-200' % binwidth)       # The covariance matrix
         chainfile = str('./files/test_files/BAOfits/BAO_MockAverage_taipan_year1_v1_xi_30-200_%d' % binwidth)   # The file in which to store the output MCMC chain
     elif (dataflag == 1):          
-        datafile = str('./files/test_files/mock_average/Mock_taipan_year1_v1.lpow_%d_0p02-0p30_ave' % binwidth)                        # The data file
-        covfile = str('./files/test_files/mock_average/Mock_taipan_year1_v1.lpow_%d_0p02-0p30_cov' % binwidth)       # The covariance matrix 
+        datafile = str('./files/test_files/mock_average/Mock_taipan_year1_v1.lpow_%d_0p03-0p25_ave_recon' % binwidth)                        # The data file
+        covfile = str('./files/test_files/mock_average/Mock_taipan_year1_v1.lpow_%d_0p03-0p25_cov_recon' % binwidth)       # The covariance matrix 
         winfile = str('./files/test_files/taipanmock_year1_mock_rand_cullan.lwin')                         #    Power spectrum (for the integral constraint)
         winmatfile = str('./files/test_files/taipanmock_year1_mock_rand_cullan.winfit_%d' % binwidth)      #    Convolution matrix (for convolving the model)
-        chainfile = str('./files/test_files/BAOfits/BAO_MockAverage_FullShape_taipan_year1_v1_lpow_0p02-0p30_%d' % binwidth)   # The file in which to store the output MCMC chain
+        chainfile = str('./files/test_files/BAOfits/BAO_MockAverage_Polynomial_taipan_year1_v1_lpow_0p03-0p25_%d_recon' % binwidth)   # The file in which to store the output MCMC chain
     elif (dataflag == 2):          
         datafile = str('./files/test_files/mock_average/Mock_taipan_year1_v1.rp_1_0p5_%d_0p02-0p30_ave' % binwidth)                        # The data file
         covfile = str('./files/test_files/mock_average/Mock_taipan_year1_v1.rp_1_0p5_%d_0p02-0p30_cov' % binwidth)       # The covariance matrix 
@@ -96,8 +96,8 @@ if __name__ == "__main__":
         exit()
 
     if (dataflag):
-        xmin = 0.02
-        xmax = 0.30
+        xmin = 0.03
+        xmax = 0.25
     else:
         xmin = 30.0
         xmax = 200.0

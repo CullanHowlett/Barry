@@ -7,5 +7,6 @@ Requirements: Python Libraries (can all be installed with pip):
                 matplotlib
                 emcee
                 hankel
+                ChainConsumer
               C Libraries:
                 gsl
