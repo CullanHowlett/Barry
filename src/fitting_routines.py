@@ -235,7 +235,7 @@ class Optimizer(object):
         if (self.model.prepare_model_flag):
             prepare_model(self.data, self.model, liketype=self.liketype, do_plot=self.do_plot, startfromprior=self.startfromprior, optimtype=self.optimtype, verbose=self.verbose)
 
-        # Do the fit with BAO
+        # Do the fit
         result = self.run_optimizer()
         self.outputstream.write("Best fit model: Parameters,       log(chi_squared),      log(likelihood),      log(posterior)\n")
         free_params = self.model.get_all_params()
@@ -467,9 +467,11 @@ def checkfitterinputs(fitter):
     return
 
 # Do any preliminary preparation of the model that we need to do. This takes as input a data class and a
-# model class and only actually does anything if the model class is Polynomial. In this case we generate an Optimizer class
-# fitter to find the normalisation such that B is close to one, then put a loose Gaussian prior on log(B). This is very recursive
-# but can be called from any other fitting class, or just generally
+# model class and only actually does anything if the model class is Polynomial or LinearPoint. For the former we generate an Optimizer class
+# fitter to find the normalisation such that B is close to one, then put a loose Gaussian prior on log(B). For the latter, we find the best fit smooth model using
+# the Polynomial class and an Optimizer class fitter and running the full fitting procedure (difficult to get your head round, but a neat way of coding it!)
+# Written like this (as opposed to as a prepare_model function associated with each model class) allows us to call prepare_model from any fitting class, or just 
+# generally (i.e., to set up the best-fit model before plotting)
 def prepare_model(data, model, liketype="SH2016", do_plot=0, startfromprior=True, optimtype="Nelder-Mead", verbose=False):
 
     if isinstance(model, Polynomial):
@@ -496,6 +498,12 @@ def prepare_model(data, model, liketype="SH2016", do_plot=0, startfromprior=True
         # Update the B prior
         model.BAO = oldBAO
         set_prior(model, "B", ["LogGaussian",1.0, 0.4])
+
+    if isinstance(model, LinearPoint):
+
+        submodel = Polynomial("CorrelationFunction", model.power, BAO=False, free_sigma_nl=False, prepare_model_flag=True)
+        smooth_params = Optimizer(data, submodel, liketype=liketype, do_plot=do_plot, startfromprior=startfromprior, optimtype=optimtype, verbose=verbose).run_optimizer()
+        model.xismooth = submodel.y
 
     return 
 

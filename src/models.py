@@ -481,14 +481,6 @@ class FullShape(object):
 
         return pksmoothspline
 
-    # This is a null routine for this model. There is nothing to prepare before fitting the data
-    def prepare_model(self, fitter):
-
-        if (self.prepare_model_flag):
-            return
-
-        return 
-
     # Compute the many non-linear terms needed for the model. This actually uses a C code as it's faster, so this just wraps that.
     def compute_nonlinearterms(self, k, pk):
 
@@ -648,33 +640,6 @@ class LinearPoint(object):
         else:
 
             return interpolate.splev(x, self.xismooth)
-
-    # For this model, when fitting the data, we first want to fit a smooth correlation function model to the data
-    # in the same vein as for the polynomial fitting method. This is then used to help identify the linear point
-    def prepare_model(self, fitter):
-
-        if (self.prepare_model_flag):
-            
-            if (self.verbose):
-                print "         Preparing model prior to fitting"
-
-            begin = [1.0, 0.0, 0.0, 0.0]
-            ft = SymmetricFourierTransform(ndim=3, N = 3000, h = 0.001)
-            pkspline = interpolate.splrep(fitter.model.power.k, fitter.model.power.pksmooth)
-            f = lambda k: interpolate.splev(k, pkspline)
-            xismooth = ft.transform(f,fitter.data.x,inverse=True, ret_err=False)
-            smooth_params = optimize.minimize(self.fit_smooth_model, begin, args=(fitter, xismooth), method="Nelder-Mead", tol=1.0e-10, options={'maxiter':50000})["x"]
-            Apoly = smooth_params[1]/fitter.data.x**2 + smooth_params[2]/fitter.data.x + smooth_params[3]
-            self.xismooth = interpolate.splrep(fitter.data.x, smooth_params[0]*xismooth+Apoly)
-
-        return 
-
-    def fit_smooth_model(self, params, fitter, xismooth):
-
-        from fitting_routines import lnlike
-        Apoly = params[1]/fitter.data.x**2 + params[2]/fitter.data.x + params[3]
-        fitter.model.y = params[0]*xismooth + Apoly
-        return -lnlike(fitter, len(params))
 
     # Routine to take the matter power spectrum, convert it to a narrow binned correlation function and compute the linear point using a very high order polynomial
     def compute_LP_theory(self, npoly=15, xmin=70.0, xmax=130.0, do_plot=0):
