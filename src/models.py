@@ -492,10 +492,10 @@ class FullShape(object):
     # Compute the many non-linear terms needed for the model. This actually uses a C code as it's faster, so this just wraps that.
     def compute_nonlinearterms(self, k, pk):
 
-        np.savetxt("compute_pt_integrals_input.dat", np.c_[k, pk], fmt="%g %g", header="k    pksmooth", delimiter='  ')
+        np.savetxt("../files/compute_pt_integrals_input.dat", np.c_[k, pk], fmt="%g %g", header="k    pksmooth", delimiter='  ')
         check_call(["gcc","compute_pt_integrals.c", "-o", "compute_pt_integrals", "-lm", "-lgsl", "-lgslcblas"])
-        check_call(["./compute_pt_integrals","-infile", "compute_pt_integrals_input.dat", "-outfile", "compute_pt_integrals_output.dat", "-koutmin=0.0001", "-koutmax=10.0", "-nkout=2000"])
-        nonlinearterms = self.read_nonlinearterms("compute_pt_integrals_output.dat")
+        check_call(["./compute_pt_integrals","-infile", "../files/compute_pt_integrals_input.dat", "-outfile", "../files/compute_pt_integrals_output.dat", "-koutmin=0.0001", "-koutmax=10.0", "-nkout=2000"])
+        nonlinearterms = self.read_nonlinearterms("../files/compute_pt_integrals_output.dat")
 
         return nonlinearterms
 
