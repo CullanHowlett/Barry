@@ -39,7 +39,8 @@ def fit_mockaverage_traditional(dataflag, matterfile, datafile, covfile, winfile
 # input matter power spectrum and fully marginalising over the measured sample covariance matrix following Sellentin & Heavens 2016.
 def fit_mockaverage_new(dataflag, matterfile, datafile, covfile, winfile, winmatfile, xmin, xmax):
 
-    power = Hinton2017(matterfile, r_s = 147.17)
+    power = EH98Tabulated(matterfile, r_s=147.17, verbose=True)
+    power = EH98CAMB(mnu=0.0, verbose=True)
 
     # Set up the type of data and model we want. Can be one of "Polynomial" or "FullShape". We will add "LinearPoint" and "BAOExtractor" later.
     if (dataflag == 0):
@@ -61,7 +62,7 @@ def fit_mockaverage_new(dataflag, matterfile, datafile, covfile, winfile, winmat
         exit()
 
     # Fit the data using either an MCMC ("MCMC") routine or iterating over a list of alpha values ("list")
-    fitter = MCMC_emcee(data, model, niterations=4000, liketype="SH2016", do_plot=0, startfrombestfit=True, outputfile=chainfile)
+    fitter = MCMC_emcee(data, model, niterations=4000, liketype="SH2016", do_plot=1, startfrombestfit=True, outputfile=chainfile)
     fitter.fit_data()
 
     return
