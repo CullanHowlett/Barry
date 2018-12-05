@@ -41,10 +41,10 @@ def fit_data_traditional(dataflag, binwidth, matterfile, datafile, covfile, winf
 # Fit the data using an MCMC chain, with a dewiggled power spectrum calculated by smoothing the input matter power spectrum and fully 
 # marginalising over the measured sample covariance matrix following Sellentin & Heavens 2016. We fix the value of sigma_nl if fitting 
 # the correlation function, and allow it to vary with a Gaussian prior of width 2Mpc/h for the power spectrum
-def fit_data_new(dataflag, binwidth, matterfile, datafile, covfile, winfile, winmatfile, chainfile, xmin, xmax):
+def fit_data_new(dataflag, binwidth, datafile, covfile, winfile, winmatfile, chainfile, xmin, xmax):
 
     # Read in the linear matter power spectrum and choose the type of smooth power spectrum model we want
-    power = Hinton2017(matterfile, r_s = 147.17)
+    power = Hinton2017CAMB(redshift=0.11, mnu=0.0)
 
     # Set up the type of data and model we want. Can be one of "Polynomial" or "FullShape". We will add "LinearPoint" and "BAOExtractor" later.
     if (dataflag == 0):
@@ -110,6 +110,6 @@ if __name__ == "__main__":
         xmin = 30.0
         xmax = 200.0
     #fit_data_traditional(dataflag, binwidth, matterfile, datafile, covfile, winfile, winmatfile, chainfile, xmin, xmax)
-    fit_data_new(dataflag, binwidth, matterfile, datafile, covfile, winfile, winmatfile, chainfile, xmin, xmax)
+    fit_data_new(dataflag, binwidth, datafile, covfile, winfile, winmatfile, chainfile, xmin, xmax)
 
 
