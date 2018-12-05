@@ -2,7 +2,7 @@
 # It has a couple of examples for fitting some data either via the method used for SDSS BOSS (traditional) or out preferred method (new)
 
 import sys
-sys.path.append("./src")
+sys.path.append("./src/")
 from read_data import *
 from powerspectrum import *
 from fitting_routines import *

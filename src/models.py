@@ -434,8 +434,6 @@ class FullShape(object):
     # Routine to add all the PT integrals togther in the correct way and evaluate the FullShape power spectrum
     def compute_pksmooth_nl(self):
 
-        print self.params
-
         if ((self.datatype == "PowerSpectrum") or (self.datatype == "BAOExtract")):
 
             b1 = self.params["b1sigma8"][0]/self.params["sigma8"][0]
