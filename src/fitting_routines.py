@@ -8,8 +8,9 @@
 import sys
 import math
 import numpy as np
+import scipy as sp
 from models import *
-from scipy import optimize, special
+from scipy import optimize, special, interpolate
 from plotting_routines import Plotter
 import emcee
 import itertools
@@ -528,9 +529,7 @@ def lnpost(params, fitter):
 
     # Compute the prior
     prior = compute_prior(fitter.model)
-    if not np.isfinite(prior):
-        return -np.inf
-
+    
     # Set the model using the new parameters
     if ((fitter.model.datatype == "PowerSpectrum") or (fitter.model.datatype == "BAOExtract")):
         yvals = fitter.model.compute_model(x=fitter.data.kwinmatin)

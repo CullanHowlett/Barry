@@ -17,7 +17,7 @@ from matplotlib import gridspec
 # Read in pre- and post-recon fits, set up some data and models and plot the best-fit model against the data. Then plot the posterior samples using ChainConsumer
 def plot_mockaverage(dataflag, matterfile, datafile, datafile_recon, covfile, covfile_recon, winfile, winmatfile, xmin, xmax, chainfile, chainfile_recon):
 
-    power = Hinton2017(matterfile, r_s = 147.17)
+    power = Hinton2017CAMB(redshift=0.11, mnu=0.0)
 
     # Set up the type of data and model we want. Can be one of "Polynomial" or "FullShape". We will add "LinearPoint" and "BAOExtractor" later.
     if (dataflag == 0):
@@ -69,7 +69,7 @@ def plot_mockaverage(dataflag, matterfile, datafile, datafile_recon, covfile, co
 
 if __name__ == "__main__":
 
-    dataflag = int(sys.argv[1])    # Whether to fit the correlation function (0) or power spectrum (otherwise)
+    dataflag = int(sys.argv[1])    # Whether to fit the correlation function (0), power spectrum (1), or BAO extract (2)
     binwidth = int(sys.argv[2])
 
     # Filenames
@@ -92,6 +92,18 @@ if __name__ == "__main__":
         datafile_recon = str('./files/test_files/mock_average/Mock_taipan_year1_v1.lpow_%d_0p03-0p25_ave_recon' % binwidth)                        # The data file
         covfile_recon = str('./files/test_files/mock_average/Mock_taipan_year1_v1.lpow_%d_0p03-0p25_cov_recon' % binwidth)       # The covariance matrix 
         chainfile_recon = str('./files/test_files/BAOfits/BAO_MockAverage_FullShape_taipan_year1_v1_lpow_0p03-0p25_%d_recon' % binwidth)   # The file in which to store the output MCMC chain
+    elif (dataflag == 2):  
+        datafile = str('./files/test_files/mock_average/Mock_taipan_year1_v1.rp_1_0p5_%d_0p02-0p30_ave' % binwidth)                        # The data file
+        covfile = str('./files/test_files/mock_average/Mock_taipan_year1_v1.rp_1_0p5_%d_0p02-0p30_cov' % binwidth)       # The covariance matrix 
+        winfile = str('./files/test_files/taipanmock_year1_mock_rand_cullan.lwin')                         #    Power spectrum (for the integral constraint)
+        winmatfile = str('./files/test_files/taipanmock_year1_mock_rand_cullan.winfit_%d' % binwidth)      #    Convolution matrix (for convolving the model)
+        chainfile = str('./files/test_files/BAOfits/BAO_MockAverage_BAOExtractor_taipan_year1_v1_rp_1_0p5_0p02-0p30_%d' % binwidth)   # The file in which to store the output MCMC chain
+        datafile_recon = str('./files/test_files/mock_average/Mock_taipan_year1_v1.rp_1_0p5_%d_0p02-0p30_ave_recon' % binwidth)                        # The data file
+        covfile_recon = str('./files/test_files/mock_average/Mock_taipan_year1_v1.rp_1_0p5_%d_0p02-0p30_cov_recon' % binwidth)       # The covariance matrix 
+        chainfile_recon = str('./files/test_files/BAOfits/BAO_MockAverage_BAOExtractor_taipan_year1_v1_rp_1_0p5_0p02-0p30_%d_recon' % binwidth)   # The file in which to store the output MCMC chain
+    else:
+        print "dataflag value not supported, ", dataflag
+        exit()
 
     if (dataflag):
         xmin = 0.03

@@ -5,6 +5,7 @@ import matplotlib.ticker as tk
 import matplotlib.font_manager
 from matplotlib import gridspec
 import numpy as np
+import scipy as sp
 from scipy import interpolate
 import itertools
 from models import *

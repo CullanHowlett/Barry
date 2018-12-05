@@ -272,6 +272,13 @@ class Hinton2017Tabulated(object):
     def __init__(self, matterfile, omega_m=0.3121, omega_b=0.0491, hubble=0.6751, degree=13, sigma=1, weight=0.5, sigma8=None, r_s=None, verbose=False):
 
         self.verbose = verbose
+        self.omega_m = omega_m
+        self.omega_b = omega_b
+        self.hubble = hubble
+        self.sigma8 = sigma8
+        self.degree = degree
+        self.sigma = sigma
+        self.weight = weight
 
         if (r_s is None):
             self.r_s = EH98_rs()
@@ -283,12 +290,6 @@ class Hinton2017Tabulated(object):
             if (self.verbose):
                 print "Setting sound horizon using user-defined value: r_s = ", self.r_s
                 print "Note: This is only used for BAOExtractor model"
-
-        self.redshift = redshift
-        self.sigma8 = sigma8
-        self.degree = degree
-        self.sigma = sigma
-        self.weight = weight
 
         read_matterpower(self, matterfile)
         self.set_pksmooth()

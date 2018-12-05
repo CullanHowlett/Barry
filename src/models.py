@@ -239,7 +239,7 @@ class Polynomial(object):
 class FullShape(object):
 
     def __init__(self, datatype, powerspectrum, nonlinearterms=None, x=None, alpha=1.0, sigma_nl=10.0, b1sigma8=1.0, b2sigma8=0.0, fsigma8=0.527, sigma8=0.8340, 
-                       sigmav=10.0, gamma=0.0, s0=1.0, free_sigma_nl=True, free_sigma8=True, BAO=True, prepare_model_flag=False, verbose=False):
+                       sigmav=10.0, gamma=0.0, s0=1.0, free_sigma_nl=True, free_sigma8=True, BAO=True, prepare_model_flag=False, remove_kaiser=False, verbose=False):
 
         if ((datatype != "PowerSpectrum") and (datatype != "CorrelationFunction") and (datatype != "BAOExtract")):
             print "Datatype ", datatype, " not supported for FullShape class, must be either 'PowerSpectrum', 'CorrelationFunction' or 'BAOExtract'"
@@ -297,6 +297,7 @@ class FullShape(object):
         self.free_sigma_nl = free_sigma_nl
         self.free_sigma8 = free_sigma8
         self.prepare_model_flag = prepare_model_flag
+        self.remove_kaiser = remove_kaiser  # This divides the model by the Kaiser boost factor, which is often done for the data during reconstruction
         
         if (self.verbose):
             print "         Parameters: ", self.get_all_params()
@@ -408,9 +409,9 @@ class FullShape(object):
 
         if ((self.datatype == "PowerSpectrum") or (self.datatype == "BAOExtract")):
             if (self.BAO):
-                return interpolate.splev(x,pksmoothspline)*interpolate.splev(x/self.params["alpha"][0],dewiggledspline)/self.params["alpha"][0]**3
+                return interpolate.splev(x,pksmoothspline)*interpolate.splev(x/self.params["alpha"][0],dewiggledspline)#/self.params["alpha"][0]**3
             else:
-                return interpolate.splev(x,pksmoothspline)/self.params["alpha"][0]**3
+                return interpolate.splev(x,pksmoothspline)#/self.params["alpha"][0]**3
         elif (self.datatype == "CorrelationFunction"):
             if (self.params["alpha"][0]*x[0] < 1.0e-3):
                 x[0] = 1.0e-3
@@ -432,6 +433,8 @@ class FullShape(object):
 
     # Routine to add all the PT integrals togther in the correct way and evaluate the FullShape power spectrum
     def compute_pksmooth_nl(self):
+
+        print self.params
 
         if ((self.datatype == "PowerSpectrum") or (self.datatype == "BAOExtract")):
 
@@ -456,7 +459,10 @@ class FullShape(object):
 
             P_0 = P_00_A + P_00_B + P_00_C + P_01_A + P_01_B + P_02_A + P_02_B + P_11_A + P_12_A + P_22_A
             Dfog = 1.0/(1.0+NL[0,0:]**2*self.params["sigmav"][0]**2/2.0)**2
-            pksmoothspline = interpolate.splrep(NL[0,0:], P_0*Dfog, s=0)
+            Kaiser = 1.0
+            if (self.remove_kaiser):
+                Kaiser = b1**2 + 2.0/3.0*b1*f + 1.0/5.0*f**2
+            pksmoothspline = interpolate.splrep(NL[0,0:], P_0*Dfog/Kaiser, s=0)
 
         elif (self.datatype == "CorrelationFunction"):
 
@@ -474,7 +480,10 @@ class FullShape(object):
 
             P_0 = P_00_A + P_01_A + P_02_A + P_11_A + P_12_A + P_22_A
             Dfog = 1.0/(1.0+NL[0,0:]**2*self.params["sigmav"][0]**2/2.0)**2
-            pksmoothspline = interpolate.splrep(NL[0,0:], P_0*Dfog, s=0)
+            Kaiser = 1.0
+            if (self.remove_kaiser):
+                Kaiser = b1**2 + 2.0/3.0*b1*f + 1.0/5.0*f**2
+            pksmoothspline = interpolate.splrep(NL[0,0:], P_0*Dfog/Kaiser, s=0)
 
         else:
             self.datatype_error()
@@ -484,10 +493,10 @@ class FullShape(object):
     # Compute the many non-linear terms needed for the model. This actually uses a C code as it's faster, so this just wraps that.
     def compute_nonlinearterms(self, k, pk):
 
-        np.savetxt("../files/compute_pt_integrals_input.dat", np.c_[k, pk], fmt="%g %g", header="k    pksmooth", delimiter='  ')
-        check_call(["gcc","compute_pt_integrals.c", "-o", "compute_pt_integrals", "-lm", "-lgsl", "-lgslcblas"])
-        check_call(["./compute_pt_integrals","-infile", "../files/compute_pt_integrals_input.dat", "-outfile", "../files/compute_pt_integrals_output.dat", "-koutmin=0.0001", "-koutmax=10.0", "-nkout=2000"])
-        nonlinearterms = self.read_nonlinearterms("../files/compute_pt_integrals_output.dat")
+        np.savetxt("./files/compute_pt_integrals_input.dat", np.c_[k, pk], fmt="%g %g", header="k    pksmooth", delimiter='  ')
+        check_call(["gcc","./src/compute_pt_integrals.c", "-o", "./src/compute_pt_integrals", "-lm", "-lgsl", "-lgslcblas"])
+        check_call(["./src/compute_pt_integrals","-infile", "./files/compute_pt_integrals_input.dat", "-outfile", "./files/compute_pt_integrals_output.dat", "-koutmin=0.0001", "-koutmax=1.0", "-nkout=400"])
+        nonlinearterms = self.read_nonlinearterms("./files/compute_pt_integrals_output.dat")
 
         return nonlinearterms
 
