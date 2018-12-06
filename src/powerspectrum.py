@@ -15,7 +15,6 @@ class EH98Tabulated(object):
 
         self.verbose = verbose
 
-        self.redshift = redshift
         self.omega_m = omega_m
         self.omega_b = omega_b
         self.hubble = hubble

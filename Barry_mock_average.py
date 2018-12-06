@@ -19,18 +19,27 @@ from matplotlib import gridspec
 # value of sigma_nl to fix to when fitting the data/mocks individually.
 def fit_mockaverage_traditional(dataflag, matterfile, datafile, covfile, winfile, winmatfile, xmin, xmax):
 
-    # Read in the data (and window function if required)
-    data = InputData(dataflag, nmocks=1000)
-    data.read_data(datafile, covfile, xmin=xmin, xmax=xmax, nconcat=binwidth, winfile=winfile, winmatfile=winmatfile)
-
     # Read in the linear matter power spectrum and choose the type of smooth power spectrum model we want
-    power = EH98(matterfile, r_s=147.17)
+    power = EH98Tabulated(matterfile, r_s=147.17)
 
-    # Set up the type of model we want. Can be one of "Polynomial" or "FullShape" or "LinearPoint". We will add "BAOExtractor" later.
-    model = Polynomial(dataflag, power)
+    # Set up the type of data and model we want. Can be one of "Polynomial" or "FullShape". We will add "LinearPoint" and "BAOExtractor" later.
+    if (dataflag == 0):
+        data = CorrelationFunction(nmocks=1000).read_data(datafile=datafile, covfile=covfile, xmin=xmin, xmax=xmax)
+        model = Polynomial("CorrelationFunction", power, free_sigma_nl=True, prepare_model_flag=True)
+    elif (dataflag == 1):
+        data = PowerSpectrum(nmocks=1000, verbose=True).read_data(datafile=datafile, covfile=covfile, xmin=xmin, xmax=xmax, winmatfile=winmatfile)
+        data.read_data(winfile=winfile, xmin=xmin, xmax=xmax, nconcat=binwidth)
+        model = Polynomial("PowerSpectrum", power, free_sigma_nl=True, prepare_model_flag=True, verbose=True)
+    elif (dataflag == 2):
+        data = BAOExtract(nmocks=1000, verbose=True).read_data(datafile=datafile, covfile=covfile, xmin=xmin, xmax=xmax, winmatfile=winmatfile)
+        data.read_data(winfile=winfile, xmin=xmin, xmax=xmax, nconcat=binwidth)
+        model = BAOExtractor(power, free_sigma_nl=True, verbose=True)
+    else:
+        print "dataflag value not supported, ", dataflag
+        exit()
 
     # Fit the data using a single optimization ("Optimizer")
-    fitter = Optimizer(data, model, liketype="Hartlap2007", do_plot=1)
+    fitter = Optimizer(data, model, liketype="Hartlap2007", do_plot=1, optimtype='BasinHopping')
     fitter.fit_data()
 
     return
@@ -60,8 +69,9 @@ def fit_mockaverage_new(dataflag, datafile, covfile, winfile, winmatfile, xmin, 
         print "dataflag value not supported, ", dataflag
         exit()
 
-    # Fit the data using either an MCMC ("MCMC") routine or iterating over a list of alpha values ("list")
-    fitter = MCMC_emcee(data, model, niterations=4000, liketype="SH2016", do_plot=1, startfrombestfit=True, outputfile=chainfile)
+    # Fit the data
+    fitter = Optimizer(data, model, liketype="SH2016", do_plot=1)
+    #fitter = MCMC_emcee(data, model, niterations=4000, liketype="SH2016", do_plot=1, startfrombestfit=True, outputfile=chainfile)
     fitter.fit_data()
 
     return

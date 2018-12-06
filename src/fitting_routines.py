@@ -19,7 +19,7 @@ import itertools
 # and output the best-fitting value for the chi-squared, likelihood and posterior with and without the BAO feature.
 class List(object):
 
-    def __init__(self, data, model, alphamin, alphamax, nalpha, outputfile=None, liketype="SH2016", do_plot=0, startfromprior=True, optimtype="Nelder-Mead", verbose=False):
+    def __init__(self, data, model, alphamin, alphamax, nalpha, outputfile=None, liketype="SH2016", do_plot=0, optimtype="BasinHopping", verbose=False):
 
         self.verbose = verbose
         self.data = data
@@ -32,7 +32,6 @@ class List(object):
         self.likelihood = 0.0
         self.posterior = 0.0
         self.do_plot = do_plot
-        self.startfromprior = startfromprior
         self.optimtype = optimtype
 
         if (self.do_plot):
@@ -55,10 +54,7 @@ class List(object):
             print "List-based fitting of alpha is not supported for LinearPoint fitting, please use class Optimizer or MCMC_emcee instead"
             exit()
 
-    def fit_data(self, optimtype=None, startfromprior=None):
-
-        if (startfromprior is not None):
-            self.startfromprior = startfromprior
+    def fit_data(self, optimtype=None):
 
         if (optimtype is not None):
             self.optimtype = optimtype
@@ -74,7 +70,7 @@ class List(object):
         # classes of model, but only does something if the model is set up to perform any preparatory steps (which is controlled by the self.model.prepare_model_flag)
         # parameter.
         if (self.model.prepare_model_flag):
-            prepare_model(self.data, self.model, liketype=self.liketype, do_plot=self.do_plot, startfromprior=self.startfromprior, optimtype=self.optimtype, verbose=self.verbose)
+            prepare_model(self.data, self.model, liketype=self.liketype, do_plot=self.do_plot, optimtype=self.optimtype, verbose=self.verbose)
 
         self.outputstream.write("           alpha      log(chi_squared)      log(likelihood)      log(posterior)      log(chi_squared) (no BAO)      log(likelihood) (no BAO)      log(posterior) (no BAO)\n")
         for i in range(self.nalpha):
@@ -114,17 +110,53 @@ class List(object):
         return alpha, chi_squared, likelihood, posterior, chi_squarednoBAO, likelihoodnoBAO, posteriornoBAO
 
     # A routine to optimize the model given some data
-    def run_optimizer(self, optimtype=None, startfromprior=None):
-
-        if (startfromprior is None):
-            startfromprior = self.startfromprior
+    def run_optimizer(self, optimtype=None):
 
         if (optimtype is None):
             optimtype = self.optimtype
 
-        # Create a simplex for Nelder-Mead minimization with a list of free parameter names. 
-        # We start the simplex at wide values drawn from the prior for each parameters
-        if (startfromprior):
+        # This uses an evolutionary algorithm to find the best-fit. Seems to work well
+        if (optimtype == "DifferentialEvolution"):
+            
+            free_params = self.model.get_free_params()
+            nfree_params = len(free_params)
+            for i in free_params:
+                if (i == "alpha"):
+                    nfree_params -= 1
+            bounds = np.empty((nfree_params,2))
+            counter = 0
+            for i in free_params:
+                if (i == "alpha"):
+                    continue
+                if (self.model.params[i][1] == "Linear"):
+                    lowval = self.model.params[i][2]
+                    hival = self.model.params[i][3]
+                elif (self.model.params[i][1] == "Log"): 
+                    lowval = math.exp(self.model.params[i][2])
+                    hival = math.exp(self.model.params[i][3])
+                elif (self.model.params[i][1] == "Gaussian"): 
+                    lowval = self.model.params[i][2]-2.0*self.model.params[i][3]
+                    hival = self.model.params[i][2]+2.0*self.model.params[i][3]
+                elif (self.model.params[i][1] == "LogGaussian"): 
+                    lowval = math.exp(self.model.params[i][2]-2.0*self.model.params[i][3])
+                    hival = math.exp(self.model.params[i][2]+2.0*self.model.params[i][3])
+                else:
+                    print "Prior type ", self.model.params[i][1], "for ", i, "not supported, must be one of: Linear, Log, Gaussian or LogGaussian"
+                    exit()
+                bounds[counter] = [lowval,hival]
+                counter += 1
+
+            nll = lambda *args: -lnpost(*args)
+            result = optimize.differential_evolution(nll, bounds, polish=True, tol=1.0e-6, args=(self,))['x']
+            nll(result,self)
+
+        # Basic Nelder-Mead minimization. Fast, but seems poor at finding the global minimum.
+        elif (optimtype == "Nelder-Mead"):
+
+            print "Warning: Nelder-Mead is fast, but seems to be quite poor at finding the global minimum. Consider using 'DifferentialEvolution' or 'BasinHopping'"
+
+            # Create a simplex for Nelder-Mead minimization with a list of free parameter names. 
+            # We start the simplex at wide values drawn from the prior for each parameters
             free_params = self.model.get_free_params()
             nfree_params = len(free_params)
             for i in free_params:
@@ -159,10 +191,14 @@ class List(object):
             # Run the Nelder-Mead minimization. For the correlation function we might be able to compute the integration over the power spectrum outside
             # this loop and pass this in as an argument to the minimizer to greatly speed things up
             nll = lambda *args: -lnpost(*args)
-            result = optimize.minimize(nll, begin, method=optimtype, tol=1.0e-7, args=self, options={'maxiter':50000, 'initial_simplex':x0})
+            result = optimize.minimize(nll, begin, method=optimtype, tol=1.0e-7, args=self, options={'maxiter':50000, 'initial_simplex':x0})['x']
+            nll(result,self)
 
-        else:
+        # Two-phase iterative method for global minimisation, where each step is minimized using Nelder-Mead, then the start point is perturbed and the fit is performed again.
+        # Seems much better at finding the true minimum than a single Nelder-Mead call, but is obviously slower.
+        elif (optimtype == "BasinHopping"):
 
+            # Create the start point
             free_params = self.model.get_free_params()
             nfree_params = len(free_params)
             for i in free_params:
@@ -173,11 +209,17 @@ class List(object):
             for i in free_params:
                 if (i == "alpha"):
                     continue
-                begin[counter] = self.model.params[i][0] 
+                begin[counter] = self.model.params[i][0]   
                 counter += 1
-  
+
             nll = lambda *args: -lnpost(*args)
-            result = optimize.minimize(nll, begin, method=optimtype, tol=1.0e-7, args=self, options={'maxiter':50000})
+            result = optimize.basinhopping(nll, begin, niter=200, minimizer_kwargs={'method':"Nelder-Mead", 'args':(self,)}, niter_success=10)['x']
+            nll(result,self)
+
+        else:
+
+            print "optimtype (", self.optimtype, ") not supported, must be one of 'DifferentialEvolution', 'Nelder-Mead' or 'BasinHopping'"
+            exit()
 
         return result
 
@@ -185,7 +227,7 @@ class List(object):
 # posterior probablility of the parameters given the data and output the best-fitting values.
 class Optimizer(object):
 
-    def __init__(self, data, model, outputfile=None, liketype="SH2016", do_plot=0, startfromprior=True, optimtype="Nelder-Mead", verbose=False):
+    def __init__(self, data, model, outputfile=None, liketype="SH2016", do_plot=0, optimtype="BasinHopping", verbose=False):
 
         self.verbose = verbose
         self.data = data
@@ -195,7 +237,6 @@ class Optimizer(object):
         self.likelihood = 0.0
         self.posterior = 0.0
         self.do_plot = do_plot
-        self.startfromprior = startfromprior
         self.optimtype = optimtype
 
         if outputfile is None:
@@ -215,10 +256,7 @@ class Optimizer(object):
             print "Warning starting optimization from a wide prior range is not recommended for LinearPoint model as it converges poorly."
             print "Convergence is much better if you set self.startfromprior == False and the initial values of the parameters to zeroes"
 
-    def fit_data(self, optimtype=None, startfromprior=None):
-
-        if (startfromprior is not None):
-            self.startfromprior = startfromprior
+    def fit_data(self, optimtype=None):
 
         if (optimtype is not None):
             self.optimtype = optimtype
@@ -234,7 +272,7 @@ class Optimizer(object):
         # classes of model, but only does something if the model is set up to perform any preparatory steps (which is controlled by the self.model.prepare_model_flag)
         # parameter.
         if (self.model.prepare_model_flag):
-            prepare_model(self.data, self.model, liketype=self.liketype, do_plot=self.do_plot, startfromprior=self.startfromprior, optimtype=self.optimtype, verbose=self.verbose)
+            prepare_model(self.data, self.model, liketype=self.liketype, do_plot=self.do_plot, optimtype=self.optimtype, verbose=self.verbose)
 
         # Do the fit
         result = self.run_optimizer()
@@ -247,30 +285,21 @@ class Optimizer(object):
             self.outputstream.close()
 
         if (self.do_plot):
-            Plotter(data=data, model=model)
+            Plotter(fignum=1, data=self.data, model=self.model)
 
         return
 
     # A routine to optimize the model given some data
-    def run_optimizer(self, optimtype=None, startfromprior=None):
-
-        if (startfromprior is None):
-            startfromprior = self.startfromprior
+    def run_optimizer(self, optimtype=None):
 
         if (optimtype is None):
             optimtype = self.optimtype
 
-        if (isinstance(self.model, LinearPoint) and (startfromprior)):
-            print "WARNING: starting optimization from a wide prior range is not recommended for LinearPoint model as the large dynamic range of"
-            print "the polynomial terms means it converges very poorly and will almost certainly give nonsense. Convergence is much better if"
-            print "you set self.startfromprior == False and use the default starting parameters for the polynomial terms"
+        # This uses an evolutionary algorithm to find the best-fit. Seems to work well
+        if (optimtype == "DifferentialEvolution"):
 
-        # Create a simplex for Nelder-Mead minimization with a list of free parameter names. 
-        # We start the simplex at wide values drawn from the prior for each parameters
-        if (startfromprior):
             free_params = self.model.get_free_params()
-            x0 = np.empty((len(free_params)+1,len(free_params)))
-            begin = np.empty(len(free_params))
+            bounds = np.empty((len(free_params),2))
             counter = 0
             for i in free_params:
                 if (self.model.params[i][1] == "Linear"):
@@ -288,26 +317,91 @@ class Optimizer(object):
                 else:
                     print "Prior type ", self.model.params[i][1], "for ", i, "not supported, must be one of: Linear, Log, Gaussian or LogGaussian"
                     exit()
-                begin[counter] = self.model.params[i][0]
-                x0[0:,counter] = np.repeat(lowval,len(free_params)+1)
-                x0[counter+1,counter] = hival       
+                bounds[counter] = [lowval,hival]
                 counter += 1
 
-            # Run the Nelder-Mead minimization
             nll = lambda *args: -lnpost(*args)
-            result = optimize.minimize(nll, begin, method=optimtype, tol=1.0e-8, args=self, options={'maxiter':100000, 'initial_simplex':x0, 'xatol':1.0e-8, 'fatol':1.0e-8})
+            result = optimize.differential_evolution(nll, bounds, polish=True, tol=1.0e-6, args=(self,))['x']
+            nll(result,self)
 
-        else:
+        # Basic Nelder-Mead minimization. Fast, but seems poor at finding the global minimum.
+        elif (optimtype == "Nelder-Mead"):
 
+            print "Warning: Nelder-Mead is fast, but seems to be quite poor at finding the global minimum. Consider using 'DifferentialEvolution' or 'BasinHopping'"
+
+            # Starting optimization from a wide prior range seems to work poorly for LinearPoint model as the large dynamic range of
+            # the polynomial terms means it converges very poorly and will almost certainly give nonsense. Convergence seems much better if
+            # we use the default starting parameters for the polynomial terms"
+            if (isinstance(self.model, LinearPoint)):
+
+                free_params = self.model.get_free_params()
+                begin = np.empty(len(free_params))
+                counter = 0
+                for i in free_params:
+                    begin[counter] = self.model.params[i][0] 
+                    counter += 1
+
+                # Run the Nelder-Mead minimization. For the correlation function we might be able to compute the integration over the power spectrum outside
+                # this loop and pass this in as an argument to the minimizer to greatly speed things up
+                nll = lambda *args: -lnpost(*args)
+                result = optimize.minimize(nll, begin, method=optimtype, tol=1.0e-7, args=self, options={'maxiter':50000, 'initial_simplex':x0})['x']
+                nll(result,self)
+
+            else:
+
+                # Create a simplex for Nelder-Mead minimization with a list of free parameter names. 
+                # We start the simplex at wide values drawn from the prior for each parameters
+                free_params = self.model.get_free_params()
+                x0 = np.empty((len(free_params)+1,len(free_params)))
+                begin = np.empty(len(free_params))
+                counter = 0
+                for i in free_params:
+                    if (self.model.params[i][1] == "Linear"):
+                        lowval = self.model.params[i][2]
+                        hival = self.model.params[i][3]
+                    elif (self.model.params[i][1] == "Log"): 
+                        lowval = math.exp(self.model.params[i][2])
+                        hival = math.exp(self.model.params[i][3])
+                    elif (self.model.params[i][1] == "Gaussian"): 
+                        lowval = self.model.params[i][2]-2.0*self.model.params[i][3]
+                        hival = self.model.params[i][2]+2.0*self.model.params[i][3]
+                    elif (self.model.params[i][1] == "LogGaussian"): 
+                        lowval = math.exp(self.model.params[i][2]-2.0*self.model.params[i][3])
+                        hival = math.exp(self.model.params[i][2]+2.0*self.model.params[i][3])
+                    else:
+                        print "Prior type ", self.model.params[i][1], "for ", i, "not supported, must be one of: Linear, Log, Gaussian or LogGaussian"
+                        exit()
+                    begin[counter] = self.model.params[i][0]
+                    x0[0:,counter] = np.repeat(lowval,len(free_params)+1)
+                    x0[counter+1,counter] = hival       
+                    counter += 1
+
+                # Run the Nelder-Mead minimization. For the correlation function we might be able to compute the integration over the power spectrum outside
+                # this loop and pass this in as an argument to the minimizer to greatly speed things up
+                nll = lambda *args: -lnpost(*args)
+                result = optimize.minimize(nll, begin, method=optimtype, tol=1.0e-7, args=self, options={'maxiter':50000, 'initial_simplex':x0})['x']
+                nll(result,self)
+
+        # Two-phase iterative method for global minimisation, where each step is minimized using Nelder-Mead, then the start point is perturbed and the fit is performed again.
+        # Seems much better at finding the true minimum than a single Nelder-Mead call, but is obviously slower.
+        elif (optimtype == "BasinHopping"):
+
+            # Create the start point
             free_params = self.model.get_free_params()
             begin = np.empty(len(free_params))
             counter = 0
             for i in free_params:
-                begin[counter] = self.model.params[i][0] 
+                begin[counter] = self.model.params[i][0]   
                 counter += 1
 
             nll = lambda *args: -lnpost(*args)
-            result = optimize.minimize(nll, begin, method=optimtype, tol=1.0e-8, args=self, options={'maxiter':100000, 'xatol':1.0e-8, 'fatol':1.0e-8})
+            result = optimize.basinhopping(nll, begin, niter=200, minimizer_kwargs={'method':"Nelder-Mead", 'args':(self,)}, niter_success=10)['x']
+            nll(result,self)
+
+        else:
+
+            print "optimtype (", self.optimtype, ") not supported, must be one of 'DifferentialEvolution', 'Nelder-Mead' or 'BasinHopping'"
+            exit()
 
         return result
 
@@ -388,7 +482,7 @@ class MCMC_emcee(object):
                 print "Best fit model with BAO feature: Parameters,       log(chi_squared),      log(likelihood),      log(posterior)"
                 free_params = self.model.get_all_params()
                 print [self.model.params[i][0] for i in free_params], self.chi_squared, self.likelihood, self.posterior
-            begin = np.array([list(itertools.chain.from_iterable([[(0.001*(np.random.rand()-0.5)+1.0)*result['x'][j] for j in range(nparams)]])) for i in range(self.nwalkers)])
+            begin = np.array([list(itertools.chain.from_iterable([[(0.001*(np.random.rand()-0.5)+1.0)*result[j] for j in range(nparams)]])) for i in range(self.nwalkers)])
         else:
             if (self.verbose):
                 print "Drawing random start points from prior:"
@@ -473,7 +567,7 @@ def checkfitterinputs(fitter):
 # the Polynomial class and an Optimizer class fitter and running the full fitting procedure (difficult to get your head round, but a neat way of coding it!)
 # Written like this (as opposed to as a prepare_model function associated with each model class) allows us to call prepare_model from any fitting class, or just 
 # generally (i.e., to set up the best-fit model before plotting)
-def prepare_model(data, model, liketype="SH2016", do_plot=0, startfromprior=True, optimtype="Nelder-Mead", verbose=False):
+def prepare_model(data, model, liketype="SH2016", do_plot=0, optimtype="BasinHopping", verbose=False):
 
     if isinstance(model, Polynomial):
 
@@ -487,8 +581,8 @@ def prepare_model(data, model, liketype="SH2016", do_plot=0, startfromprior=True
             oldparams = np.empty(len(free_params))
             for counter, i in enumerate(free_params):
                 oldparams[counter] = model.params[i][0]
-            result = Optimizer(data, model, liketype=liketype, do_plot=do_plot, startfromprior=startfromprior, optimtype=optimtype, verbose=verbose).run_optimizer()
-            model.norm = result["x"][0]
+            result = Optimizer(data, model, liketype=liketype, do_plot=do_plot, optimtype=optimtype, verbose=verbose).run_optimizer()
+            model.norm = result[0]
             for counter, i in enumerate(free_params):
                 model.params[i][0] = oldparams[counter]
         else:
@@ -503,7 +597,7 @@ def prepare_model(data, model, liketype="SH2016", do_plot=0, startfromprior=True
     if isinstance(model, LinearPoint):
 
         submodel = Polynomial("CorrelationFunction", model.power, BAO=False, free_sigma_nl=False, prepare_model_flag=True)
-        smooth_params = Optimizer(data, submodel, liketype=liketype, do_plot=do_plot, startfromprior=startfromprior, optimtype=optimtype, verbose=verbose).run_optimizer()
+        smooth_params = Optimizer(data, submodel, liketype=liketype, do_plot=do_plot, optimtype=optimtype, verbose=verbose).run_optimizer()
         model.xismooth = submodel.y
 
     return 
@@ -526,7 +620,6 @@ def lnpost(params, fitter):
         for i in free_params:
             fitter.model.params[i][0] = params[counter]
             counter += 1
-
 
     # Compute the prior
     prior = compute_prior(fitter.model)

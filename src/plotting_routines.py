@@ -114,6 +114,7 @@ class Plotter(object):
             plt_handle = self.add_model_to_plot(data, model)
             if (self.interactive):
                 return plt_handle
+            self.display_plot()
 
         return
 

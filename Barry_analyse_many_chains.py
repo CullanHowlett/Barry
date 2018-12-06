@@ -17,8 +17,8 @@ if __name__ == "__main__":
     firstmock = int(sys.argv[4])
     nmocks = int(sys.argv[5])
 
-    xmin = 0.03
-    xmax = 0.25
+    xmin = 0.02
+    xmax = 0.30
     power = Hinton2017CAMB(redshift=0.11, mnu=0.0)
 
     alphamean = np.empty((nmocks,2))
@@ -45,8 +45,8 @@ if __name__ == "__main__":
                     model.sigma_nl = 11.7
                 elif (dataflag == 1):          
                     datafile = str('/fred/oz074/clustering/results/Mock_v1/prerecon/Mock_taipan_year1_v1_R%d.lpow_blake' % (mocknum))                        # The data file
-                    covfile = str('./files/test_files/mock_average/Mock_taipan_year1_v1.lpow_%d_0p03-0p25_cov' % binwidth)       # The covariance matrix 
-                    chainfile = str('/fred/oz074/clustering/results/BAOfits/Mock_v1/BAO_Mock_FullShape_SigmaNLprior_taipan_year1_v1_R%d_lpow_0p03-0p25_%d' % (mocknum, binwidth))   # The file in which to store the output MCMC chain
+                    covfile = str('./files/test_files/mock_average/Mock_taipan_year1_v1.lpow_%d_0p02-0p30_cov' % binwidth)       # The covariance matrix 
+                    chainfile = str('/fred/oz074/clustering/results/BAOfits/Mock_v1/BAO_Mock_FullShape_SigmaNLprior_taipan_year1_v1_R%d_lpow_0p02-0p30_%d' % (mocknum, binwidth))   # The file in which to store the output MCMC chain
                     model = FullShape("PowerSpectrum", power, free_sigma_nl=True, nonlinearterms="./files/compute_pt_integrals_output.dat", verbose=True)
                     set_prior(model, "sigma_nl", ["Gaussian", 12.5, 4.0])
                 elif (dataflag == 2):          
@@ -66,9 +66,9 @@ if __name__ == "__main__":
                     model.sigma_nl = 11.7
                 elif (dataflag == 1):          
                     datafile = str('/fred/oz074/clustering/results/Mock_v1/postrecon/Mock_taipan_year1_v1_R%d.lpow_blake_recon' % (mocknum))                        # The data file
-                    covfile = str('./files/test_files/mock_average/Mock_taipan_year1_v1.lpow_%d_0p03-0p25_cov_recon' % binwidth)       # The covariance matrix 
-                    chainfile = str('/fred/oz074/clustering/results/BAOfits/Mock_v1/BAO_Mock_FullShape_SigmaNLprior_taipan_year1_v1_R%d_lpow_0p03-0p25_%d_recon' % (mocknum, binwidth))   # The file in which to store the output MCMC chain
-                    model = FullShape("PowerSpectrum", power, free_sigma_nl=True, nonlinearterms="./files/compute_pt_integrals_output.dat", remove_kaiser=True, verbose=True)
+                    covfile = str('./files/test_files/mock_average/Mock_taipan_year1_v1.lpow_%d_0p02-0p30_cov_recon' % binwidth)       # The covariance matrix 
+                    chainfile = str('/fred/oz074/clustering/results/BAOfits/Mock_v1/BAO_Mock_FullShape_SigmaNLprior_taipan_year1_v1_R%d_lpow_0p02-0p30_%d_recon' % (mocknum, binwidth))   # The file in which to store the output MCMC chain
+                    model = FullShape("PowerSpectrum", power, free_sigma_nl=True, nonlinearterms="./files/compute_pt_integrals_output.dat", remove_kaiser=False, verbose=True)
                     set_prior(model, "sigma_nl", ["Gaussian", 12.5, 4.0])
                 elif (dataflag == 2):          
                     datafile = str('./files/test_files/mock_individual/Mock_taipan_year1_v1_R%d.lpow_blake' % (mocknum))                        # The data file
@@ -114,7 +114,7 @@ if __name__ == "__main__":
             for counter, j in enumerate(free_params):
                 model.params[j][0] = max_params[counter]
             print model.params
-            fitter = List(data, model, alphavals[1], alphavals[1], 1, liketype="SH2016", do_plot=0, startfromprior=False, optimtype="Powell")
+            fitter = List(data, model, alphavals[1], alphavals[1], 1, liketype="SH2016", do_plot=0)
             alpha, chi_squared, likelihood, posterior, chi_squarednoBAO, likelihoodnoBAO, posteriornoBAO = fitter.fit_data()
 
             alphasig[mock,i] = chi_squarednoBAO-chi_squared
@@ -123,7 +123,7 @@ if __name__ == "__main__":
             else:
                 alphasig[mock,i] = -np.sqrt(np.fabs(alphasig[mock,i]))
 
-    strout = str("/fred/oz074/clustering/results/BAOfits/Mock_v1/BAO_Mock_FullShape_SigmaNLprior_taipan_year1_v1_lpow_0p03-0p25_%d_summary_%d" % (binwidth, ID))
+    strout = str("/fred/oz074/clustering/results/BAOfits/Mock_v1/BAO_Mock_FullShape_SigmaNLprior_taipan_year1_v1_lpow_0p02-0p30_%d_summary_%d" % (binwidth, ID))
     outfile = open(strout, 'w')
     for mock in range(nmocks):
         mocknum = ID*nmocks+firstmock+mock
