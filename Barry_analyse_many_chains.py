@@ -96,7 +96,6 @@ if __name__ == "__main__":
             # Find the marginalised maximum likelihood value of alpha and the 68% confidence interval about this point (bounded by the prior on alpha)
             c = ChainConsumer().add_chain(samples, parameters=params, posterior=loglike, num_eff_data_points=len(data.x), num_free_params=len(params))
             alphavals = c.analysis.get_summary()['$\\alpha$']
-            print alphavals
             if (alphavals[0] == None):
                 alphavals[0] = model.params["alpha"][2]
             if (alphavals[1] == None):
@@ -113,7 +112,6 @@ if __name__ == "__main__":
             free_params = model.get_all_params()
             for counter, j in enumerate(free_params):
                 model.params[j][0] = max_params[counter]
-            print model.params
             fitter = List(data, model, alphavals[1], alphavals[1], 1, liketype="SH2016", do_plot=0)
             alpha, chi_squared, likelihood, posterior, chi_squarednoBAO, likelihoodnoBAO, posteriornoBAO = fitter.fit_data()
 
