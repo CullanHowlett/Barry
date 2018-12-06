@@ -30,20 +30,7 @@ if __name__ == "__main__":
 
         mocknum = mock+firstmock
 
-        # Set up the type of model we want.
-        if (dataflag == 0):
-            model = Polynomial("CorrelationFunction", power, free_sigma_nl=False, prepare_model_flag=True)
-            model.sigma_nl = 11.7
-        elif (dataflag == 1):
-            model = FullShape("PowerSpectrum", power, free_sigma_nl=True, nonlinearterms="./files/compute_pt_integrals_output.dat", verbose=True)
-            set_prior(model, "sigma_nl", ["Gaussian", 12.5, 4.0])
-        elif (dataflag == 2):
-            model = BAOExtractor(power, free_sigma_nl=True, nonlinearterms="./files/compute_pt_integrals_output.dat", verbose=True)
-        else:
-            print "dataflag value not supported, ", dataflag
-            exit()
-
-        # Loop ove pre or post-recon data
+        # Loop ove pre or post-recon data and models
         for i in range(2):
 
             if ((dataflag == 1) or (dataflag == 2)):
@@ -55,14 +42,19 @@ if __name__ == "__main__":
                     datafile = str('./files/test_files/mock_individual/Mock_taipan_year1_v1_R%d.xi_%d' % (mocknum, binwidth))
                     covfile =  str('./files/test_files/mock_average/Mock_taipan_year1_v1.xi_%d_cov' % binwidth)       # The covariance matrix
                     chainfile = str('./files/test_files/BAOfits/BAO_Mock_taipan_year1_v1_R%d_xi_%d' % (mocknum, binwidth))   # The file in which to store the output MCMC chain
+                    model = Polynomial("CorrelationFunction", power, free_sigma_nl=False, prepare_model_flag=True)
+                    model.sigma_nl = 11.7
                 elif (dataflag == 1):          
-                    datafile = str('/fred/oz074/clustering/results/Mock_v1/postrecon/Mock_taipan_year1_v1_R%d.lpow_blake' % (mocknum))                        # The data file
+                    datafile = str('/fred/oz074/clustering/results/Mock_v1/prerecon/Mock_taipan_year1_v1_R%d.lpow_blake' % (mocknum))                        # The data file
                     covfile = str('./files/test_files/mock_average/Mock_taipan_year1_v1.lpow_%d_0p02-0p30_cov' % binwidth)       # The covariance matrix 
-                    chainfile = str('./files/test_files/BAOfits/BAO_Mock_FullShape_SigmaNLprior_taipan_year1_v1_R%d_lpow_0p02-0p30_%d' % (mocknum, binwidth))   # The file in which to store the output MCMC chain
+                    chainfile = str('/fred/oz074/clustering/results/BAOfits/Mock_v1/BAO_Mock_FullShape_SigmaNLprior_taipan_year1_v1_R%d_lpow_0p03-0p25_%d' % (mocknum, binwidth))   # The file in which to store the output MCMC chain
+                    model = FullShape("PowerSpectrum", power, free_sigma_nl=True, nonlinearterms="./files/compute_pt_integrals_output.dat", verbose=True)
+                    set_prior(model, "sigma_nl", ["Gaussian", 12.5, 4.0])
                 elif (dataflag == 2):          
                     datafile = str('./files/test_files/mock_individual/Mock_taipan_year1_v1_R%d.lpow_blake' % (mocknum))                        # The data file
                     covfile = str('./files/test_files/mock_average/Mock_taipan_year1_v1.rp_1_0p5_%d_0p02-0p30_cov' % binwidth)       # The covariance matrix 
                     chainfile = str('./files/test_files/BAOfits/BAO_Mock_BAOExtractor_FreeSigmaNL_taipan_year1_v1_R%d_rp_1_0p5_0p02-0p30_%d' % (mocknum, binwidth))   # The file in which to store the output MCMC chain
+                    model = BAOExtractor(power, free_sigma_nl=True, nonlinearterms="./files/compute_pt_integrals_output.dat", verbose=True)
                 else:
                     print "dataflag value not supported, ", dataflag
                     exit()
@@ -71,14 +63,19 @@ if __name__ == "__main__":
                     datafile = str('./files/test_files/mock_individual/Mock_taipan_year1_v1_R%d.xi_%d' % (mocknum, binwidth))
                     covfile =  str('./files/test_files/mock_average/Mock_taipan_year1_v1.xi_%d_cov' % binwidth)       # The covariance matrix
                     chainfile = str('./files/test_files/BAOfits/BAO_Mock_taipan_year1_v1_R%d_xi_%d' % (mocknum, binwidth))   # The file in which to store the output MCMC chain
+                    model = Polynomial("CorrelationFunction", power, free_sigma_nl=False, prepare_model_flag=True)
+                    model.sigma_nl = 11.7
                 elif (dataflag == 1):          
                     datafile = str('/fred/oz074/clustering/results/Mock_v1/postrecon/Mock_taipan_year1_v1_R%d.lpow_blake_recon' % (mocknum))                        # The data file
                     covfile = str('./files/test_files/mock_average/Mock_taipan_year1_v1.lpow_%d_0p02-0p30_cov_recon' % binwidth)       # The covariance matrix 
-                    chainfile = str('./files/test_files/BAOfits/BAO_Mock_FullShape_SigmaNLprior_taipan_year1_v1_R%d_lpow_0p02-0p30_%d_recon' % (mocknum, binwidth))   # The file in which to store the output MCMC chain
+                    chainfile = str('/fred/oz074/clustering/results/BAOfits/Mock_v1/BAO_Mock_FullShape_SigmaNLprior_taipan_year1_v1_R%d_lpow_0p03-0p25_%d_recon' % (mocknum, binwidth))   # The file in which to store the output MCMC chain
+                    model = FullShape("PowerSpectrum", power, free_sigma_nl=True, nonlinearterms="./files/compute_pt_integrals_output.dat", remove_kaiser=True, verbose=True)
+                    set_prior(model, "sigma_nl", ["Gaussian", 12.5, 4.0])
                 elif (dataflag == 2):          
                     datafile = str('./files/test_files/mock_individual/Mock_taipan_year1_v1_R%d.lpow_blake' % (mocknum))                        # The data file
                     covfile = str('./files/test_files/mock_average/Mock_taipan_year1_v1.rp_1_0p5_%d_0p02-0p30_cov' % binwidth)       # The covariance matrix 
                     chainfile = str('./files/test_files/BAOfits/BAO_Mock_BAOExtractor_FreeSigmaNL_taipan_year1_v1_R%d_rp_1_0p5_0p02-0p30_%d' % (mocknum, binwidth))   # The file in which to store the output MCMC chain
+                    model = BAOExtractor(power, free_sigma_nl=True, nonlinearterms="./files/compute_pt_integrals_output.dat", verbose=True)
                 else:
                     print "dataflag value not supported, ", dataflag
                     exit()
