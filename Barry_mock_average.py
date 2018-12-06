@@ -51,7 +51,7 @@ def fit_mockaverage_new(dataflag, datafile, covfile, winfile, winmatfile, xmin, 
         data = PowerSpectrum(nmocks=1000, verbose=True).read_data(datafile=datafile, covfile=covfile, xmin=xmin, xmax=xmax, winmatfile=winmatfile)
         data.read_data(winfile=winfile, xmin=xmin, xmax=xmax, nconcat=binwidth)
         #model = Polynomial("PowerSpectrum", power, free_sigma_nl=True, prepare_model_flag=True, verbose=True)
-        model = FullShape("PowerSpectrum", power, free_sigma_nl=True, nonlinearterms="./files/compute_pt_integrals_output.dat", remove_kaiser=True, verbose=True)
+        model = FullShape("PowerSpectrum", power, free_sigma_nl=True, nonlinearterms="./files/compute_pt_integrals_output.dat", remove_kaiser=False, verbose=True)
     elif (dataflag == 2):
         data = BAOExtract(nmocks=1000, verbose=True).read_data(datafile=datafile, covfile=covfile, xmin=xmin, xmax=xmax, winmatfile=winmatfile)
         data.read_data(winfile=winfile, xmin=xmin, xmax=xmax, nconcat=binwidth)

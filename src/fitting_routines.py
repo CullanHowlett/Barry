@@ -143,11 +143,11 @@ class List(object):
                     lowval = math.exp(self.model.params[i][2])
                     hival = math.exp(self.model.params[i][3])
                 elif (self.model.params[i][1] == "Gaussian"): 
-                    lowval = self.model.params[i][2]-4.0*self.model.params[i][3]
-                    hival = self.model.params[i][2]+4.0*self.model.params[i][3]
+                    lowval = self.model.params[i][2]-2.0*self.model.params[i][3]
+                    hival = self.model.params[i][2]+2.0*self.model.params[i][3]
                 elif (self.model.params[i][1] == "LogGaussian"): 
-                    lowval = math.exp(self.model.params[i][2]-4.0*self.model.params[i][3])
-                    hival = math.exp(self.model.params[i][2]+4.0*self.model.params[i][3])
+                    lowval = math.exp(self.model.params[i][2]-2.0*self.model.params[i][3])
+                    hival = math.exp(self.model.params[i][2]+2.0*self.model.params[i][3])
                 else:
                     print "Prior type ", self.model.params[i][1], "for ", i, "not supported, must be one of: Linear, Log, Gaussian or LogGaussian"
                     exit()
@@ -280,11 +280,11 @@ class Optimizer(object):
                     lowval = math.exp(self.model.params[i][2])
                     hival = math.exp(self.model.params[i][3])
                 elif (self.model.params[i][1] == "Gaussian"): 
-                    lowval = self.model.params[i][2]-4.0*self.model.params[i][3]
-                    hival = self.model.params[i][2]+4.0*self.model.params[i][3]
+                    lowval = self.model.params[i][2]-2.0*self.model.params[i][3]
+                    hival = self.model.params[i][2]+2.0*self.model.params[i][3]
                 elif (self.model.params[i][1] == "LogGaussian"): 
-                    lowval = math.exp(self.model.params[i][2]-4.0*self.model.params[i][3])
-                    hival = math.exp(self.model.params[i][2]+4.0*self.model.params[i][3])
+                    lowval = math.exp(self.model.params[i][2]-2.0*self.model.params[i][3])
+                    hival = math.exp(self.model.params[i][2]+2.0*self.model.params[i][3])
                 else:
                     print "Prior type ", self.model.params[i][1], "for ", i, "not supported, must be one of: Linear, Log, Gaussian or LogGaussian"
                     exit()
@@ -527,9 +527,10 @@ def lnpost(params, fitter):
             fitter.model.params[i][0] = params[counter]
             counter += 1
 
+
     # Compute the prior
     prior = compute_prior(fitter.model)
-    
+
     # Set the model using the new parameters
     if ((fitter.model.datatype == "PowerSpectrum") or (fitter.model.datatype == "BAOExtract")):
         yvals = fitter.model.compute_model(x=fitter.data.kwinmatin)
