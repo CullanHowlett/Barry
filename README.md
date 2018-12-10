@@ -1,12 +1,22 @@
 # Barry
+
 Modular isotropic BAO fitting code
 
-Requirements: Python Libraries (can all be installed with pip):
-                numpy
-                scipy
-                matplotlib
-                emcee
-                hankel
-                ChainConsumer
-              C Libraries:
-                gsl
+Requirements:
+
+```
+numpy
+scipy
+matplotlib
+emcee
+hankel
+ChainConsumer
+```
+
+Run `pip install -r requirements.txt` to install all python dependencies.
+
+C Libraries:
+
+```
+gsl
+```

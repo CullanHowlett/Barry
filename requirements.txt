@@ -1,0 +1,6 @@
+numpy
+scipy
+matplotlib
+emcee
+hankel
+ChainConsumer
