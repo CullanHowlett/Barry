@@ -22,7 +22,7 @@ class EH98Tabulated(object):
         self.sigma8 = sigma8
 
         if (r_s is None):
-            self.r_s = self.EH98_rs()
+            self.r_s = EH98_rs(self)
             if (self.verbose):
                 print "Setting sound horizon using EH98 formulae: r_s = ", self.r_s
         else:
@@ -159,7 +159,7 @@ class EH98CAMB(object):
 
         if (r_s is None):
             if (r_s_type == 'EH98'):
-                self.r_s = self.EH98_rs()
+                self.r_s = EH98_rs(self)
                 if (self.verbose):
                     print "Setting sound horizon using EH98 formulae: r_s = ", self.r_s
             elif (r_s_type == 'CAMB'):

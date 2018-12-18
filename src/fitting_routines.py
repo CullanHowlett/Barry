@@ -239,6 +239,9 @@ class Optimizer(object):
         self.do_plot = do_plot
         self.optimtype = optimtype
 
+        if (self.do_plot):
+            self.plotter = Plotter(fignum=1, data=self.data, interactive=True)
+
         if outputfile is None:
             self.outputfile = None
             self.outputstream = sys.stdout
@@ -251,10 +254,6 @@ class Optimizer(object):
                 print "Outputting to file: ", self.outputfile
 
         checkfitterinputs(self) 
-
-        if (isinstance(self.model, LinearPoint) and (self.startfromprior)):
-            print "Warning starting optimization from a wide prior range is not recommended for LinearPoint model as it converges poorly."
-            print "Convergence is much better if you set self.startfromprior == False and the initial values of the parameters to zeroes"
 
     def fit_data(self, optimtype=None):
 
@@ -344,7 +343,7 @@ class Optimizer(object):
                 # Run the Nelder-Mead minimization. For the correlation function we might be able to compute the integration over the power spectrum outside
                 # this loop and pass this in as an argument to the minimizer to greatly speed things up
                 nll = lambda *args: -lnpost(*args)
-                result = optimize.minimize(nll, begin, method=optimtype, tol=1.0e-7, args=self, options={'maxiter':50000, 'initial_simplex':x0})['x']
+                result = optimize.minimize(nll, begin, method=optimtype, tol=1.0e-7, args=self, options={'maxiter':50000})['x']
                 nll(result,self)
 
             else:
@@ -598,7 +597,7 @@ def prepare_model(data, model, liketype="SH2016", do_plot=0, optimtype="BasinHop
 
         submodel = Polynomial("CorrelationFunction", model.power, BAO=False, free_sigma_nl=False, prepare_model_flag=True)
         smooth_params = Optimizer(data, submodel, liketype=liketype, do_plot=do_plot, optimtype=optimtype, verbose=verbose).run_optimizer()
-        model.xismooth = submodel.y
+        model.xismooth = interpolate.splrep(submodel.x,submodel.y)
 
     return 
 
@@ -642,6 +641,8 @@ def lnpost(params, fitter):
     else:
         print "Datatype ", fitter.model.datatype, " not supported, must be either 'PowerSpectrum', 'CorrelationFunction' or 'BAOExtract'"
         exit()
+
+    #fitter.plotter.display_plot(plt_array=[fitter.plotter.add_model_to_plot(fitter.data, fitter.model)])
 
     like = lnlike(len(params), fitter)
     fitter.posterior = prior+like

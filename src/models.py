@@ -513,10 +513,10 @@ class FullShape(object):
 class BAOExtractor(FullShape):
 
     def __init__(self, powerspectrum, n=0.0, Delta=0.5, nonlinearterms=None, x=None, alpha=1.0, sigma_nl=10.0, b1sigma8=1.0, b2sigma8=0.0, fsigma8=0.527, sigma8=0.8340, 
-                       sigmav=10.0, gamma=0.0, s0=1.0, free_sigma_nl=True, free_sigma8=True, BAO=True, prepare_model_flag=False, verbose=False):
+                       sigmav=10.0, gamma=0.0, s0=1.0, free_sigma_nl=True, free_sigma8=True, BAO=True, prepare_model_flag=False, remove_kaiser=False, verbose=False):
 
         FullShape.__init__(self, "BAOExtract", powerspectrum, nonlinearterms=nonlinearterms, x=x, alpha=alpha, sigma_nl=sigma_nl, b1sigma8=b1sigma8, b2sigma8=b2sigma8, fsigma8=fsigma8, sigma8=sigma8, 
-                            sigmav=sigmav, gamma=gamma, s0=s0, free_sigma_nl=free_sigma_nl, free_sigma8=free_sigma8, BAO=BAO, prepare_model_flag=prepare_model_flag, verbose=verbose)
+                            sigmav=sigmav, gamma=gamma, s0=s0, free_sigma_nl=free_sigma_nl, free_sigma8=free_sigma8, BAO=BAO, prepare_model_flag=prepare_model_flag, remove_kaiser=remove_kaiser, verbose=verbose)
 
         self.n = n
         self.kwidth = 2.0*math.pi*Delta/powerspectrum.r_s
@@ -542,7 +542,7 @@ class BAOExtractor(FullShape):
 # point of the polynomial.  Otherwise it is the fraction of the total linear point contribution that comes from the "dip", such that LP = lpoint*s_dip + (1.0-lpoint)*s_peak
 class LinearPoint(object):
 
-    def __init__(self, powerspectrum, x=None, polyorder=5, lpoint=-1.0, offset=100.0, polyterms=None, prepare_model_flag=True, 
+    def __init__(self, powerspectrum, x=None, polyorder=5, lpoint=-1.0, offset=100.0, polyterms=None, BAO=True, prepare_model_flag=True, 
                     LP_theory=None, polyorder_LP_theory=15, xmin_LP_theory=70.0, xmax_LP_theory=130.0, plot_LP_theory=False, verbose=False):
 
         self.verbose = verbose
@@ -584,7 +584,7 @@ class LinearPoint(object):
 
         # For this model BAO sets whether we return the xismooth model computed in a similar way to the Polynomial class, or the LinearPoint
         # polynomial fit. xismooth is computed just before fitting if prepare_model_flag is True
-        self.BAO = False
+        self.BAO = BAO
         self.prepare_model_flag = prepare_model_flag
 
         if (self.verbose):
@@ -826,7 +826,10 @@ def compute_prior(model):
         elif (model.params[i][1] == "Gaussian"):
             priorsum += -0.5*(model.params[i][0]-model.params[i][2])**2/model.params[i][3]**2
         elif (model.params[i][1] == "LogGaussian"):
-            priorsum += -0.5*(np.log(model.params[i][0])-np.log(model.params[i][2]))**2/model.params[i][3]**2
+            if (model.params[i][0] <= 0.0):
+                return -np.inf
+            else:
+                priorsum += -0.5*(np.log(model.params[i][0])-np.log(model.params[i][2]))**2/model.params[i][3]**2
         else:
             print "Prior type ", model.params[i][1], "for ", i, "not supported, must be one of: Linear, Log, Gaussian or LogGaussian"
             exit()
